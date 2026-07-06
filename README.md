@@ -42,7 +42,7 @@ Dilengkapi dengan **7 mode kecerdasan buatan**, **custom jailbreak prompt**, **O
 ### ▶️ Jalankan dengan Cepat (Linux / WSL / macOS)
 
 ```bash
-git clone https://github.com/usernamekamu/bin-ai-hub.git
+git clone https://github.com/killers-byte/dbexe.git
 cd bin-ai-hub
 python3 -m venv venv
 source venv/bin/activate
@@ -75,7 +75,7 @@ apt install -y python3 python3-pip python3-venv git nmap gobuster dirb curl
 #### 3. Clone repository & setup virtual environment
 ```bash
 cd /opt
-git clone https://github.com/usernamekamu/bin-ai-hub.git
+git clone https://github.com/killers-byte/dbexe.git
 cd bin-ai-hub
 python3 -m venv venv
 source venv/bin/activate
