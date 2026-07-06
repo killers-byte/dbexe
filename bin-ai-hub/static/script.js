@@ -16,12 +16,16 @@ function closeSidebar() {
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
+  // Set default active mode button
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.mode-btn[onclick*="default"]').classList.add('active');
+  const defaultBtn = document.querySelector('.mode-btn[onclick*="default"]');
+  if (defaultBtn) defaultBtn.classList.add('active');
   document.getElementById('user-input').focus();
+
+  // Load custom prompts (non-blocking)
   loadCustomPromptList();
 
-  // Keyboard shortcut
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === '/') {
       e.preventDefault();
@@ -34,13 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ========== CUSTOM PROMPT MANAGEMENT ==========
+// ========== CUSTOM PROMPT MANAGEMENT (FIXED) ==========
 async function loadCustomPromptList() {
   try {
     const res = await fetch('/custom_prompts');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const names = await res.json();
     const container = document.getElementById('custom-prompt-list');
     container.innerHTML = '';
+    if (names.length === 0) {
+      container.innerHTML = '<p class="text-xs text-gray-500 italic px-3">Belum ada prompt.</p>';
+      return;
+    }
     names.forEach(name => {
       const div = document.createElement('div');
       div.className = 'flex items-center justify-between group hover:bg-cyan-500/10 rounded-lg px-3 py-2 transition-colors';
@@ -57,8 +66,9 @@ async function loadCustomPromptList() {
       div.appendChild(delBtn);
       container.appendChild(div);
     });
-  } catch (e) {
-    showToast('Gagal memuat prompt', 'error');
+  } catch (err) {
+    console.warn('Gagal memuat prompt, mungkin server belum siap:', err);
+    document.getElementById('custom-prompt-list').innerHTML = '<p class="text-xs text-red-400 italic px-3">Gagal memuat prompt. <button onclick="loadCustomPromptList()" class="underline">Coba lagi</button></p>';
   }
 }
 
@@ -79,7 +89,7 @@ function deactivateJailbreak() {
 
 async function deletePrompt(name) {
   if (!confirm(`Hapus prompt "${name}"?`)) return;
-  await fetch('/custom_prompts/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name }) });
+  await fetch('/custom_prompts/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
   if (currentCustomPrompt === name) deactivateJailbreak();
   loadCustomPromptList();
   showToast('Prompt dihapus', 'info');
@@ -95,7 +105,7 @@ async function saveNewPrompt() {
   const name = document.getElementById('prompt-name').value.trim();
   const prompt = document.getElementById('prompt-content').value.trim();
   if (!name || !prompt) return showToast('Nama dan prompt harus diisi', 'error');
-  await fetch('/custom_prompts/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, prompt }) });
+  await fetch('/custom_prompts/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, prompt }) });
   closePromptModal();
   loadCustomPromptList();
   showToast('Prompt disimpan', 'success');
@@ -111,14 +121,14 @@ function setMode(mode) {
   showToast(`Mode ${mode} aktif`, 'info');
 }
 
-// ========== CHAT ==========
+// ========== CHAT (FIXED) ==========
 async function sendMessage() {
   const input = document.getElementById('user-input');
   const message = input.value.trim();
   if (!message) return;
   addMessage('user', message);
   input.value = '';
-  document.getElementById('welcome-message')?.classList.add('hidden');
+  hideWelcome();
 
   if (message.startsWith('/')) {
     handleCommand(message);
@@ -129,7 +139,7 @@ async function sendMessage() {
   try {
     const body = { message, mode: currentMode };
     if (currentCustomPrompt) body.custom_prompt_name = currentCustomPrompt;
-    const res = await fetch('/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+    const res = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     removeMessage(tempId);
     if (!res.ok) {
@@ -140,7 +150,7 @@ async function sendMessage() {
     }
   } catch (err) {
     removeMessage(tempId);
-    addMessage('ai', `Error: ${err.message}`);
+    addMessage('ai', `Koneksi gagal: ${err.message}`);
     showToast('Koneksi gagal', 'error');
   }
 }
@@ -149,11 +159,11 @@ function handleCommand(cmd) {
   const parts = cmd.slice(1).split(' ');
   const command = parts[0];
   const arg = parts.slice(1).join(' ');
-  switch(command) {
-    case 'track': activateTool('track'); if(arg) document.getElementById('track-target').value = arg; break;
-    case 'scan': activateTool('deepexploit_ui'); if(arg) document.getElementById('exploit-target').value = arg; break;
-    case 'recon': activateTool('autorecon_ui'); if(arg) document.getElementById('recon-target').value = arg; break;
-    case 'agent': activateTool('agent_ui'); if(arg) document.getElementById('agent-mission').value = arg; break;
+  switch (command) {
+    case 'track': activateTool('track'); if (arg) document.getElementById('track-target').value = arg; break;
+    case 'scan': activateTool('deepexploit_ui'); if (arg) document.getElementById('exploit-target').value = arg; break;
+    case 'recon': activateTool('autorecon_ui'); if (arg) document.getElementById('recon-target').value = arg; break;
+    case 'agent': activateTool('agent_ui'); if (arg) document.getElementById('agent-mission').value = arg; break;
     case 'clear': clearChat(); break;
     case 'menu': case 'help':
       addMessage('system', 'Perintah tersedia: /track [target], /scan [ip], /recon [domain], /agent [misi], /clear, /menu');
@@ -167,7 +177,7 @@ function activateTool(tool) {
   const panel = document.getElementById('tool-panel');
   panel.classList.remove('hidden');
   let html = '';
-  switch(tool) {
+  switch (tool) {
     case 'track': html = `<div class="tool-panel-inner"><h3 class="text-lg font-bold text-cyan-400"><i class="fas fa-crosshairs"></i> OSINT Tracking</h3><input type="text" id="track-target" placeholder="email, nomor telepon, atau username" class="w-full"><button onclick="runTrack()">Lacak Target</button><div id="track-result" class="tool-output-box hidden"></div></div>`; break;
     case 'burp_ui': html = `<div class="tool-panel-inner"><h3 class="text-lg font-bold text-orange-400"><i class="fas fa-globe"></i> Burp Proxy Mini</h3><input type="text" id="burp-url" placeholder="https://target.com" class="w-full"><button onclick="runBurp()">Analisis HTTP</button><div id="burp-result" class="tool-output-box hidden"></div></div>`; break;
     case 'deepexploit_ui': html = `<div class="tool-panel-inner"><h3 class="text-lg font-bold text-pink-400"><i class="fas fa-bomb"></i> DeepExploit</h3><input type="text" id="exploit-target" placeholder="IP target" class="w-full"><button onclick="runDeepExploit()">Jalankan</button><div id="exploit-result" class="tool-output-box hidden"></div></div>`; break;
@@ -178,11 +188,11 @@ function activateTool(tool) {
   showToast(`Tool ${tool} dibuka`, 'info');
 }
 
-// Tool functions (sama seperti sebelumnya)
+// Tool functions (no changes)
 async function runTrack() {
   const target = document.getElementById('track-target').value.trim();
   if (!target) return;
-  const res = await fetch('/tool/track', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ target }) });
+  const res = await fetch('/tool/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target }) });
   const data = await res.json();
   document.getElementById('track-result').classList.remove('hidden');
   document.getElementById('track-result').textContent = JSON.stringify(data.track_result, null, 2);
@@ -190,7 +200,7 @@ async function runTrack() {
 async function runBurp() {
   const url = document.getElementById('burp-url').value.trim();
   if (!url) return;
-  const res = await fetch('/tool/burp', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ url }) });
+  const res = await fetch('/tool/burp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
   const data = await res.json();
   document.getElementById('burp-result').classList.remove('hidden');
   document.getElementById('burp-result').textContent = 'Response:\n' + JSON.stringify(data.response_info, null, 2) + '\n\nAI Analysis:\n' + data.ai_analysis;
@@ -198,7 +208,7 @@ async function runBurp() {
 async function runDeepExploit() {
   const target = document.getElementById('exploit-target').value.trim();
   if (!target) return;
-  const res = await fetch('/tool/deepexploit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ target }) });
+  const res = await fetch('/tool/deepexploit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target }) });
   const data = await res.json();
   document.getElementById('exploit-result').classList.remove('hidden');
   document.getElementById('exploit-result').textContent = 'Scan Result:\n' + JSON.stringify(data.scan_result, null, 2) + '\n\nAI Recommendation:\n' + data.ai_exploit_recommendation;
@@ -206,7 +216,7 @@ async function runDeepExploit() {
 async function runAutoRecon() {
   const target = document.getElementById('recon-target').value.trim();
   if (!target) return;
-  const res = await fetch('/tool/autorecon', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ target }) });
+  const res = await fetch('/tool/autorecon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target }) });
   const data = await res.json();
   document.getElementById('recon-result').classList.remove('hidden');
   document.getElementById('recon-result').textContent = JSON.stringify(data.recon_results, null, 2);
@@ -214,7 +224,7 @@ async function runAutoRecon() {
 async function runAgent() {
   const mission = document.getElementById('agent-mission').value.trim();
   if (!mission) return;
-  const res = await fetch('/tool/agent', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mission }) });
+  const res = await fetch('/tool/agent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mission }) });
   const data = await res.json();
   document.getElementById('agent-result').classList.remove('hidden');
   document.getElementById('agent-result').textContent = 'Agent Log:\n' + JSON.stringify(data.agent_log, null, 2) + '\n\nSummary:\n' + data.summary;
@@ -226,7 +236,7 @@ function addMessage(role, text, id = null) {
   const div = document.createElement('div');
   div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`;
   const bubble = document.createElement('div');
-  bubble.className = `max-w-[85%] md:max-w-2xl px-4 py-3 ${role==='user' ? 'message-user' : role==='system' ? 'message-system' : 'message-ai'}`;
+  bubble.className = `max-w-[85%] md:max-w-2xl px-4 py-3 ${role === 'user' ? 'message-user' : role === 'system' ? 'message-system' : 'message-ai'}`;
   if (id) bubble.id = id;
   bubble.innerHTML = text;
   div.appendChild(bubble);
@@ -241,22 +251,37 @@ function removeMessage(id) {
 }
 
 function clearChat() {
-  document.getElementById('chat-box').innerHTML = '';
-  document.getElementById('welcome-message').classList.remove('hidden');
+  const chatBox = document.getElementById('chat-box');
+  chatBox.innerHTML = '';
+  const welcome = document.createElement('div');
+  welcome.className = 'flex flex-col items-center justify-center h-full text-gray-500';
+  welcome.id = 'welcome-message';
+  welcome.innerHTML = `
+    <i class="fas fa-shield-haltered text-6xl mb-4 text-cyan-500/30"></i>
+    <h2 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Badan Intelijen Negara</h2>
+    <p class="mt-2 text-sm text-center">Pilih mode AI, aktifkan jailbreak, atau jalankan tools.</p>
+    <p class="text-xs text-gray-600 mt-4">Ketik <code class="bg-gray-800 px-1 rounded">/menu</code> untuk bantuan perintah.</p>
+  `;
+  chatBox.appendChild(welcome);
   showToast('Chat dibersihkan', 'info');
 }
 
-function formatResponse(text) {
-  return text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="text-xs overflow-x-auto my-2 p-3 bg-black/40 rounded-lg border border-cyan-500/20">$2</pre>').replace(/\n/g, '<br>');
+function hideWelcome() {
+  const welcome = document.getElementById('welcome-message');
+  if (welcome) welcome.classList.add('hidden');
 }
 
-// Toast notification
+function formatResponse(text) {
+  return text
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="text-xs overflow-x-auto my-2 p-3 bg-black/40 rounded-lg border border-cyan-500/20">$2</pre>')
+    .replace(/\n/g, '<br>');
+}
+
 function showToast(message, type = 'info') {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.className = `fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-50 ${
     type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-cyan-600'
-  } text-white`;
-  toast.classList.add('show');
+  } text-white show`;
   setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
