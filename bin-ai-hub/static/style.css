@@ -1,0 +1,181 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #0b0f19;
+  color: #e0e0e0;
+  overflow: hidden;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.25);
+  border-radius: 10px;
+}
+
+aside {
+  background: rgba(13, 20, 33, 0.9) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 1023px) {
+  aside {
+    position: fixed;
+    z-index: 50;
+    height: 100%;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+  }
+  aside.-translate-x-full {
+    transform: translateX(-100%);
+  }
+  aside.translate-x-0 {
+    transform: translateX(0);
+  }
+}
+
+.mode-btn, .tool-btn {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.mode-btn.active, .tool-btn.active {
+  background: rgba(0, 229, 255, 0.1);
+  border-left: 3px solid #00e5ff;
+  color: #00e5ff;
+}
+
+.mode-btn:hover, .tool-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+header {
+  background: rgba(13, 20, 33, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.message-user {
+  background: linear-gradient(135deg, #0088ff, #00e5ff);
+  color: #fff;
+  border-radius: 1.5rem 1.5rem 0.25rem 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 136, 255, 0.3);
+  max-width: 85%;
+  word-wrap: break-word;
+}
+
+.message-ai {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem 1.5rem 1.5rem 0.25rem;
+  max-width: 85%;
+  color: #d0d0d0;
+  word-wrap: break-word;
+}
+
+.message-system {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  font-style: italic;
+  max-width: 80%;
+  color: #888;
+  text-align: center;
+  margin: 0 auto;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.tool-panel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.tool-panel-inner input, .tool-panel-inner textarea {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: white;
+  font-size: 0.875rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.tool-panel-inner input:focus, .tool-panel-inner textarea:focus {
+  outline: none;
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+}
+.tool-panel-inner button {
+  background: linear-gradient(135deg, #00b8d4, #0052cc);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tool-panel-inner button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
+}
+.tool-output-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  max-height: 250px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #b3e5fc;
+}
+
+#prompt-modal > div {
+  animation: modalFadeIn 0.3s ease;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+#prompt-modal textarea, #prompt-modal input {
+  outline: none;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+#prompt-modal textarea:focus, #prompt-modal input:focus {
+  border-color: rgba(0, 229, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+}
+
+@media (max-width: 640px) {
+  .message-user, .message-ai, .message-system {
+    max-width: 90%;
+    font-size: 0.9rem;
+  }
+}
