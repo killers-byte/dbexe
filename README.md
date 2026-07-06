@@ -1,4 +1,4 @@
-```markdown
+```
 # 🛡️ BIN AI Hub – Badan Intelijen Negara
 
 <p align="center">
