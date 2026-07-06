@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BIN AI Hub | Badan Intelijen Negara</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            bin: {
+              900: '#0b0f19',
+              800: '#0d1421',
+              700: '#131c2e',
+              600: '#1a2740',
+              500: '#00e5ff',
+              400: '#00b8d4',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-bin-900 text-gray-100 font-sans antialiased h-screen overflow-hidden flex flex-col">
+
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-bin-800/90 backdrop-blur-xl border-r border-white/5 flex flex-col p-4 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:z-auto lg:h-full overflow-y-auto">
+    <div class="text-center mb-6">
+      <div class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">🛡️ BIN AI</div>
+      <p class="text-xs text-gray-400 mt-1 tracking-widest uppercase">Badan Intelijen Negara</p>
+    </div>
+
+    <div class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">💬 Mode AI</div>
+    <nav class="flex flex-col space-y-1 mb-4" id="mode-buttons">
+      <button onclick="setMode('default')" class="mode-btn group flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-cyan-300 transition-colors">
+        <i class="fas fa-brain w-5 text-center"></i><span>Default Chat</span>
+      </button>
+      <button onclick="setMode('pentest')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-red-300 transition-colors">
+        <i class="fas fa-user-secret w-5 text-center"></i><span>PentestGPT</span>
+      </button>
+      <button onclick="setMode('hacker')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-green-300 transition-colors">
+        <i class="fas fa-skull w-5 text-center"></i><span>HackerGPT</span>
+      </button>
+      <button onclick="setMode('worm')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-purple-300 transition-colors">
+        <i class="fas fa-worm w-5 text-center"></i><span>WormGPT / FraudGPT</span>
+      </button>
+      <button onclick="setMode('burp')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-orange-300 transition-colors">
+        <i class="fas fa-network-wired w-5 text-center"></i><span>Burp Suite AI</span>
+      </button>
+      <button onclick="setMode('deepexploit')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-pink-300 transition-colors">
+        <i class="fas fa-bomb w-5 text-center"></i><span>DeepExploit</span>
+      </button>
+      <button onclick="setMode('autorecon')" class="mode-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-yellow-300 transition-colors">
+        <i class="fas fa-search w-5 text-center"></i><span>AutoRecon</span>
+      </button>
+    </nav>
+
+    <div class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">🧪 Custom Jailbreak</div>
+    <div class="flex flex-col space-y-1 mb-2" id="custom-prompt-list"></div>
+    <button onclick="showAddPromptModal()" class="text-xs text-cyan-400 hover:text-cyan-200 flex items-center gap-2 mb-6 px-3 py-1">
+      <i class="fas fa-plus-circle"></i> Tambah Prompt
+    </button>
+
+    <div class="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">🔧 Tools Khusus</div>
+    <div class="flex flex-col space-y-1 mb-6">
+      <button onclick="activateTool('track')" class="tool-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-cyan-200 transition-colors">
+        <i class="fas fa-crosshairs w-5 text-center"></i><span>Track (OSINT)</span>
+      </button>
+      <button onclick="activateTool('burp_ui')" class="tool-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 transition-colors">
+        <i class="fas fa-globe w-5 text-center"></i><span>Burp Proxy Mini</span>
+      </button>
+      <button onclick="activateTool('deepexploit_ui')" class="tool-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 transition-colors">
+        <i class="fas fa-skull-crossbones w-5 text-center"></i><span>DeepExploit (Nmap)</span>
+      </button>
+      <button onclick="activateTool('autorecon_ui')" class="tool-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 transition-colors">
+        <i class="fas fa-satellite w-5 text-center"></i><span>AutoRecon</span>
+      </button>
+      <button onclick="activateTool('agent_ui')" class="tool-btn flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 transition-colors">
+        <i class="fas fa-robot w-5 text-center"></i><span>Agen AI Otonom</span>
+      </button>
+    </div>
+
+    <div class="mt-auto text-xs text-gray-600 text-center">
+      v3.5 Quantum · BIN
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden lg:ml-0">
+    <header class="bg-bin-800/40 backdrop-blur-sm border-b border-white/5 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2 md:gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden text-gray-300 hover:text-white p-1">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+        <span id="mode-indicator" class="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-cyan-300 px-2 py-0.5 rounded-full text-xs font-semibold tracking-wide truncate">
+          Mode: Default
+        </span>
+        <span id="jailbreak-indicator" class="hidden bg-gradient-to-r from-yellow-500/20 to-red-500/20 border border-yellow-500/40 text-yellow-300 px-2 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1">
+          🔓 <span id="jailbreak-name-display" class="truncate max-w-[80px] md:max-w-none"></span>
+          <button onclick="deactivateJailbreak()" class="ml-0.5 text-yellow-300 hover:text-white transition-colors"><i class="fas fa-times-circle"></i></button>
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="clearChat()" class="text-xs text-gray-400 hover:text-white transition-colors"><i class="far fa-trash-alt mr-1"></i><span class="hidden sm:inline">Bersihkan</span></button>
+      </div>
+    </header>
+
+    <div id="chat-box" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scrollbar">
+      <div class="flex flex-col items-center justify-center h-full text-gray-500" id="welcome-message">
+        <i class="fas fa-shield-haltered text-6xl mb-4 text-cyan-500/30"></i>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Badan Intelijen Negara</h2>
+        <p class="mt-2 text-sm text-center">Pilih mode AI, aktifkan jailbreak, atau jalankan tools.</p>
+      </div>
+    </div>
+
+    <div id="tool-panel" class="hidden border-t border-white/5 bg-bin-800/40 backdrop-blur-sm p-3 md:p-4 animate-slide-up"></div>
+
+    <div class="p-3 md:p-4 border-t border-white/5 bg-bin-800/60">
+      <div class="flex items-center gap-2 md:gap-3 max-w-6xl mx-auto">
+        <input type="text" id="user-input" placeholder="Ketik perintah..." 
+               class="flex-1 bg-bin-700/60 border border-white/10 rounded-xl px-4 py-2.5 md:py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 transition-all text-sm md:text-base">
+        <button onclick="sendMessage()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2.5 md:px-5 md:py-3 rounded-xl font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-105 active:scale-95">
+          <i class="fas fa-paper-plane md:mr-2"></i><span class="hidden md:inline">Kirim</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div id="prompt-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-bin-700 rounded-2xl p-6 w-full max-w-lg border border-white/10 shadow-2xl">
+      <h3 class="text-xl font-bold text-cyan-300 mb-4"><i class="fas fa-plus-circle mr-2"></i>Tambah Custom Jailbreak Prompt</h3>
+      <div class="mb-4">
+        <label class="block text-sm text-gray-400 mb-1">Nama Prompt</label>
+        <input type="text" id="prompt-name" class="w-full bg-bin-900 border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="misal: Jailbreak Ultimate">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm text-gray-400 mb-1">System Prompt</label>
+        <textarea id="prompt-content" rows="5" class="w-full bg-bin-900 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm" placeholder="Tulis system prompt di sini..."></textarea>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button onclick="saveNewPrompt()" class="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-lg font-semibold text-sm">Simpan</button>
+        <button onclick="closePromptModal()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg text-sm">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
