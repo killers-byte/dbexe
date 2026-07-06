@@ -37,7 +37,7 @@
   <!-- Overlay mobile -->
   <div id="sidebar-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
 
-  <!-- Sidebar (glassmorphism + terminal border) -->
+  <!-- Sidebar (glassmorphism) -->
   <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-bin-800/80 backdrop-blur-xl border-r border-cyan-500/20 flex flex-col p-4 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:z-auto lg:h-full overflow-y-auto shadow-2xl shadow-cyan-500/10">
     <div class="text-center mb-6">
       <div class="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent drop-shadow-lg glitch-text" data-text="🛡️ BIN AI">🛡️ BIN AI</div>
@@ -95,7 +95,7 @@
     </div>
 
     <div class="mt-auto text-xs text-gray-600 text-center border-t border-gray-700 pt-3">
-      <span class="text-cyan-500">v4.0</span> Quantum · BIN
+      <span class="text-cyan-500">v4.1</span> Quantum · BIN
     </div>
   </aside>
 
@@ -132,11 +132,11 @@
     <!-- Tool Panel -->
     <div id="tool-panel" class="hidden border-t border-cyan-500/20 bg-bin-800/60 backdrop-blur-md p-3 md:p-4 animate-slide-up"></div>
 
-    <!-- Input Area (ala terminal) -->
+    <!-- Input Area (terminal style) -->
     <div class="p-3 md:p-4 border-t border-cyan-500/20 bg-bin-800/80">
       <div class="flex items-center gap-2 md:gap-3 max-w-6xl mx-auto">
         <div class="hidden md:flex items-center text-cyan-500 text-lg font-terminal mr-2">root@bin:~#</div>
-        <input type="text" id="user-input" placeholder="Ketik perintah atau /help untuk bantuan..." 
+        <input type="text" id="user-input" placeholder="Ketik perintah atau /help..." 
                class="flex-1 bg-transparent border border-cyan-500/30 rounded-lg px-4 py-2.5 md:py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-500/50 transition-all text-sm md:text-base font-mono"
                autocomplete="off">
         <button onclick="sendMessage()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-4 py-2.5 md:px-6 md:py-3 rounded-lg font-semibold text-white shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-105 active:scale-95">
@@ -166,7 +166,7 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-5 right-5 bg-cyan-600 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
+  <div id="toast" class="fixed bottom-5 right-5 bg-cyan-600 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none"></div>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
