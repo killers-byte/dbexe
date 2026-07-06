@@ -1,6 +1,7 @@
 let currentMode = 'default';
 let currentCustomPrompt = null;
 
+// ========== SIDEBAR TOGGLE ==========
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
@@ -8,27 +9,32 @@ function toggleSidebar() {
   sidebar.classList.toggle('translate-x-0');
   overlay.classList.toggle('hidden');
 }
-
 function closeSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  sidebar.classList.add('-translate-x-full');
-  sidebar.classList.remove('translate-x-0');
-  overlay.classList.add('hidden');
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebar-overlay').classList.add('hidden');
 }
 
+// ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.mode-btn[onclick*="default"]').classList.add('active');
   document.getElementById('user-input').focus();
   loadCustomPromptList();
-  document.querySelectorAll('#sidebar .mode-btn, #sidebar .tool-btn, #sidebar button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (window.innerWidth < 1024) closeSidebar();
-    });
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === '/') {
+      e.preventDefault();
+      document.getElementById('user-input').focus();
+    }
+    if (e.key === 'Escape') {
+      closeSidebar();
+      document.getElementById('tool-panel').classList.add('hidden');
+    }
   });
 });
 
+// ========== CUSTOM PROMPT MANAGEMENT ==========
 async function loadCustomPromptList() {
   try {
     const res = await fetch('/custom_prompts');
@@ -37,7 +43,7 @@ async function loadCustomPromptList() {
     container.innerHTML = '';
     names.forEach(name => {
       const div = document.createElement('div');
-      div.className = 'flex items-center justify-between group hover:bg-white/5 rounded-lg px-3 py-2 transition-colors';
+      div.className = 'flex items-center justify-between group hover:bg-cyan-500/10 rounded-lg px-3 py-2 transition-colors';
       const btn = document.createElement('button');
       btn.className = 'flex-1 text-left text-sm text-gray-300 hover:text-yellow-300 transition-colors truncate';
       btn.textContent = name;
@@ -45,14 +51,14 @@ async function loadCustomPromptList() {
       const delBtn = document.createElement('button');
       delBtn.className = 'text-gray-600 hover:text-red-400 transition-colors ml-2 opacity-0 group-hover:opacity-100';
       delBtn.innerHTML = '<i class="fas fa-trash-alt text-xs"></i>';
-      delBtn.title = 'Hapus prompt ini';
+      delBtn.title = 'Hapus prompt';
       delBtn.onclick = (e) => { e.stopPropagation(); deletePrompt(name); };
       div.appendChild(btn);
       div.appendChild(delBtn);
       container.appendChild(div);
     });
   } catch (e) {
-    console.error('Gagal memuat custom prompts:', e);
+    showToast('Gagal memuat prompt', 'error');
   }
 }
 
@@ -61,23 +67,22 @@ function activateJailbreak(name) {
   document.getElementById('jailbreak-indicator').classList.remove('hidden');
   document.getElementById('jailbreak-name-display').textContent = name;
   addMessage('system', `Jailbreak "${name}" diaktifkan.`);
+  showToast(`Jailbreak "${name}" aktif`, 'success');
 }
 
 function deactivateJailbreak() {
   currentCustomPrompt = null;
   document.getElementById('jailbreak-indicator').classList.add('hidden');
   addMessage('system', 'Jailbreak dinonaktifkan.');
+  showToast('Jailbreak nonaktif', 'info');
 }
 
 async function deletePrompt(name) {
   if (!confirm(`Hapus prompt "${name}"?`)) return;
-  await fetch('/custom_prompts/delete', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ name })
-  });
+  await fetch('/custom_prompts/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name }) });
   if (currentCustomPrompt === name) deactivateJailbreak();
   loadCustomPromptList();
+  showToast('Prompt dihapus', 'info');
 }
 
 function showAddPromptModal() {
@@ -85,58 +90,58 @@ function showAddPromptModal() {
   document.getElementById('prompt-name').value = '';
   document.getElementById('prompt-content').value = '';
 }
-
-function closePromptModal() {
-  document.getElementById('prompt-modal').classList.add('hidden');
-}
-
+function closePromptModal() { document.getElementById('prompt-modal').classList.add('hidden'); }
 async function saveNewPrompt() {
   const name = document.getElementById('prompt-name').value.trim();
   const prompt = document.getElementById('prompt-content').value.trim();
-  if (!name || !prompt) return alert('Nama dan prompt harus diisi.');
-  await fetch('/custom_prompts/save', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ name, prompt })
-  });
+  if (!name || !prompt) return showToast('Nama dan prompt harus diisi', 'error');
+  await fetch('/custom_prompts/save', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, prompt }) });
   closePromptModal();
   loadCustomPromptList();
+  showToast('Prompt disimpan', 'success');
 }
 
+// ========== MODE AI ==========
 function setMode(mode) {
   currentMode = mode;
   document.getElementById('mode-indicator').textContent = 'Mode: ' + mode.toUpperCase();
   document.querySelectorAll('#mode-buttons .mode-btn').forEach(b => b.classList.remove('active'));
   const btn = document.querySelector(`#mode-buttons .mode-btn[onclick="setMode('${mode}')"]`);
   if (btn) btn.classList.add('active');
+  showToast(`Mode ${mode} aktif`, 'info');
 }
 
+// ========== CHAT ==========
 async function sendMessage() {
   const input = document.getElementById('user-input');
   const message = input.value.trim();
   if (!message) return;
   addMessage('user', message);
   input.value = '';
-  document.getElementById('welcome-message').classList.add('hidden');
+  document.getElementById('welcome-message')?.classList.add('hidden');
+
   if (message.startsWith('/')) {
     handleCommand(message);
     return;
   }
-  const tempId = addMessage('ai', '<i class="fas fa-circle-notch fa-spin mr-2"></i> Berpikir...');
+
+  const tempId = addMessage('ai', '<i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...');
   try {
     const body = { message, mode: currentMode };
     if (currentCustomPrompt) body.custom_prompt_name = currentCustomPrompt;
-    const res = await fetch('/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
+    const res = await fetch('/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
     removeMessage(tempId);
-    addMessage('ai', formatResponse(data.reply));
+    if (!res.ok) {
+      addMessage('ai', `Error: ${data.reply || 'Gagal memproses.'}`);
+      showToast('Gagal memproses', 'error');
+    } else {
+      addMessage('ai', formatResponse(data.reply));
+    }
   } catch (err) {
     removeMessage(tempId);
     addMessage('ai', `Error: ${err.message}`);
+    showToast('Koneksi gagal', 'error');
   }
 }
 
@@ -149,10 +154,15 @@ function handleCommand(cmd) {
     case 'scan': activateTool('deepexploit_ui'); if(arg) document.getElementById('exploit-target').value = arg; break;
     case 'recon': activateTool('autorecon_ui'); if(arg) document.getElementById('recon-target').value = arg; break;
     case 'agent': activateTool('agent_ui'); if(arg) document.getElementById('agent-mission').value = arg; break;
-    default: addMessage('system', 'Perintah tidak dikenal.');
+    case 'clear': clearChat(); break;
+    case 'menu': case 'help':
+      addMessage('system', 'Perintah tersedia: /track [target], /scan [ip], /recon [domain], /agent [misi], /clear, /menu');
+      break;
+    default: addMessage('system', 'Perintah tidak dikenal. Ketik /menu');
   }
 }
 
+// ========== TOOLS PANEL ==========
 function activateTool(tool) {
   const panel = document.getElementById('tool-panel');
   panel.classList.remove('hidden');
@@ -165,8 +175,10 @@ function activateTool(tool) {
     case 'agent_ui': html = `<div class="tool-panel-inner"><h3 class="text-lg font-bold text-purple-400"><i class="fas fa-robot"></i> Agen AI Otonom</h3><input type="text" id="agent-mission" placeholder="Deskripsikan misi..." class="w-full"><button onclick="runAgent()">Jalankan Misi</button><div id="agent-result" class="tool-output-box hidden"></div></div>`; break;
   }
   panel.innerHTML = html;
+  showToast(`Tool ${tool} dibuka`, 'info');
 }
 
+// Tool functions (sama seperti sebelumnya)
 async function runTrack() {
   const target = document.getElementById('track-target').value.trim();
   if (!target) return;
@@ -208,6 +220,7 @@ async function runAgent() {
   document.getElementById('agent-result').textContent = 'Agent Log:\n' + JSON.stringify(data.agent_log, null, 2) + '\n\nSummary:\n' + data.summary;
 }
 
+// ========== UI HELPERS ==========
 function addMessage(role, text, id = null) {
   const chatBox = document.getElementById('chat-box');
   const div = document.createElement('div');
@@ -230,8 +243,20 @@ function removeMessage(id) {
 function clearChat() {
   document.getElementById('chat-box').innerHTML = '';
   document.getElementById('welcome-message').classList.remove('hidden');
+  showToast('Chat dibersihkan', 'info');
 }
 
 function formatResponse(text) {
-  return text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="text-xs overflow-x-auto my-2 p-3 bg-black/40 rounded-lg border border-white/10">$2</pre>').replace(/\n/g, '<br>');
+  return text.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="text-xs overflow-x-auto my-2 p-3 bg-black/40 rounded-lg border border-cyan-500/20">$2</pre>').replace(/\n/g, '<br>');
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = `fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-50 ${
+    type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-cyan-600'
+  } text-white`;
+  toast.classList.add('show');
+  setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
