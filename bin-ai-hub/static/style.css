@@ -92,7 +92,6 @@ header {
   box-shadow: 0 4px 15px rgba(0, 136, 255, 0.4);
   max-width: 85%;
   word-wrap: break-word;
-  position: relative;
 }
 .message-ai {
   background: rgba(0, 20, 40, 0.7);
@@ -111,12 +110,6 @@ header {
   color: #7f8c8d;
   text-align: center;
   margin: 0 auto;
-}
-
-/* Typing animation */
-@keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
 }
 
 /* Tool Panel */
@@ -171,9 +164,10 @@ header {
 #toast.show {
   transform: translateY(0);
   opacity: 1;
+  pointer-events: auto;
 }
 
-/* Mobile adjustments */
+/* Mobile */
 @media (max-width: 640px) {
   .message-user, .message-ai, .message-system {
     max-width: 90%;
