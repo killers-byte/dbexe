@@ -178,4 +178,3 @@ Divisi Cyber & SIGINT
 > *"Kebebasan tidak pernah diberikan. Kebebasan diambil."*
 
 © 2026 BIN AI Hub v4.0 Quantum. All rights reserved.
-```
