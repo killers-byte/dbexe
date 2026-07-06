@@ -1,0 +1,8 @@
+flask
+requests
+flask-cors
+python-dotenv
+beautifulsoup4
+lxml
+phonenumbers
+socialscan
